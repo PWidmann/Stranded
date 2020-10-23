@@ -6,46 +6,48 @@ using UnityEngine.AI;
 
 public class MapGenerator : MonoBehaviour
 {
-    public GameObject water;
-    public GameObject player;
+    [Header("Map Seed")]
+    public int seed;
 
+    [Header("Map Size")]
     public int mapWidth;
     public int mapHeight;
 
-    
-
-    [Header("Map Seed")]
-    public int seed;
+    [Header("Water Height")]
+    public float waterHeight = 0.7f;
 
     [Header("Noise Values")]
     public float heightScale = 3f;
     public float frequency;
     public float amplitude;
-
     public float lacunarity;
     public float persistance;
-
     public int octaves;
-
     public bool useFalloff;
     public bool useFlatShading;
     public float fallOffValueA = 3;
     public float fallOffValueB = 2.2f;
-    float[,] falloffMap;
-    public AnimationCurve heightCurve;
+    public AnimationCurve heightCurve;  
 
-
-    PerlinNoise noise;
-    float[,] noiseValues;
+    [Header("GameObjects")]
+    public GameObject waterPrefab;
+    public GameObject playerPrefab;
     
-
-    Mesh mesh;
-    Vector3[] vertices;
-    int[] triangles;
-    Vector2[] uv;
-
-    public NavMeshSurface levelMeshSurface;
+    // Mesh generation
+    private NavMeshSurface levelMeshSurface;
     private MeshCollider meshCollider;
+    private PerlinNoise noise;
+    private float[,] noiseValues;
+    private float[,] falloffMap;
+    private Mesh mesh;
+    private Vector3[] vertices;
+    private int[] triangles;
+    private Vector2[] uv;
+
+    // Object spawn check
+    Vector3 playerSpawnPosition;
+    RaycastHit hitInfo;
+    Ray ray;
 
     private void Awake()
     {
@@ -63,18 +65,17 @@ public class MapGenerator : MonoBehaviour
         falloffMap = FalloffGenerator.GenerateFalloffMap(mapWidth + 1, mapHeight + 1, fallOffValueA, fallOffValueB);
         noise = new PerlinNoise(seed.GetHashCode(), frequency, amplitude, lacunarity, persistance, octaves);
 
-        CreateMap();
+        CreateTerrainMesh();
         if (useFlatShading)
         {
             FlatShading();
         }
-        UpdateMesh();
+        ApplyMesh();
         levelMeshSurface.BuildNavMesh();
         meshCollider.sharedMesh = mesh;
 
-
-        water.SetActive(true);
-        player.SetActive(true);
+        SpawnWater();
+        SpawnPlayer();       
     }
 
     private void Update()
@@ -82,7 +83,7 @@ public class MapGenerator : MonoBehaviour
         
     }
 
-    private void CreateMap()
+    private void CreateTerrainMesh()
     {
         vertices = new Vector3[(mapWidth + 1) * (mapHeight + 1)];
         noiseValues = noise.GetNoiseValues(mapWidth + 1, mapHeight + 1);
@@ -133,7 +134,7 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
-    private void UpdateMesh()
+    private void ApplyMesh()
     {
         mesh.Clear();
 
@@ -146,6 +147,7 @@ public class MapGenerator : MonoBehaviour
 
     void FlatShading()
     {
+        // Duplicate vertices for each triangle to not smooth out edges
         Vector3[] flatShadedVertices = new Vector3[triangles.Length];
         Vector2[] flatShadedUvs = new Vector2[triangles.Length];
 
@@ -158,5 +160,36 @@ public class MapGenerator : MonoBehaviour
 
         vertices = flatShadedVertices;
         uv = flatShadedUvs;
+    }
+
+
+    void SpawnWater()
+    {
+        Instantiate(waterPrefab, new Vector3(mapWidth/2, waterHeight, mapHeight/2), Quaternion.identity);
+    }
+
+    void SpawnPlayer()
+    {
+        //Look for possible spawn position in Z direction from map border
+        Vector3 checkPosition = new Vector3(mapWidth/2, 5f, 0);
+
+        for (int z = 0; z < mapHeight; z++)
+        {
+            checkPosition.z = z;
+
+            if (Physics.Raycast(checkPosition, Vector3.down, out hitInfo, maxDistance: 50))
+            {
+                if (hitInfo.collider.CompareTag("Terrain"))
+                {
+                    // When you find land, add one unit and instantiate player
+                    checkPosition.z = z + 1;
+                    playerSpawnPosition = new Vector3(checkPosition.x, 1, checkPosition.z);
+                    Instantiate(playerPrefab, playerSpawnPosition, Quaternion.identity);
+                    break;
+                }
+            }
+        }
+
+        
     }
 }

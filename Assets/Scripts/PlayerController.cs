@@ -7,7 +7,7 @@ using Cinemachine;
 
 public class PlayerController : MonoBehaviour
 {
-    public CinemachineVirtualCamera CMvirtualCamera;
+    CinemachineVirtualCamera cMvirtualCamera;
     public float cameraZoomRate = 3f;
     Vector3 target;
     NavMeshAgent agent;
@@ -19,6 +19,9 @@ public class PlayerController : MonoBehaviour
     {
         cam = Camera.main;
         agent = GetComponent<NavMeshAgent>();
+        cMvirtualCamera = cam.GetComponent<CinemachineVirtualCamera>();
+        cMvirtualCamera.Follow = gameObject.transform;
+        cMvirtualCamera.LookAt = gameObject.transform;
     }
 
 
@@ -50,18 +53,17 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetAxis("Mouse ScrollWheel") != 0f)
         {
-            if (CMvirtualCamera.m_Lens.OrthographicSize <= 6.6f && CMvirtualCamera.m_Lens.OrthographicSize >= 2.4f)
+            if (cMvirtualCamera.m_Lens.OrthographicSize <= 5.6f && cMvirtualCamera.m_Lens.OrthographicSize >= 2.4f)
             {
-                CMvirtualCamera.m_Lens.OrthographicSize += Input.GetAxis("Mouse ScrollWheel") * cameraZoomRate * -1;
-                
-            }
-                
+                cMvirtualCamera.m_Lens.OrthographicSize += Input.GetAxis("Mouse ScrollWheel") * cameraZoomRate * -1;
+            } 
         }
 
-        if (CMvirtualCamera.m_Lens.OrthographicSize > 6.6f)
-            CMvirtualCamera.m_Lens.OrthographicSize = 6.6f;
-        if (CMvirtualCamera.m_Lens.OrthographicSize < 2.4f)
-            CMvirtualCamera.m_Lens.OrthographicSize = 2.4f;
+        // Clamp camera distance
+        if (cMvirtualCamera.m_Lens.OrthographicSize > 5.6f)
+            cMvirtualCamera.m_Lens.OrthographicSize = 5.6f;
+        if (cMvirtualCamera.m_Lens.OrthographicSize < 2.4f)
+            cMvirtualCamera.m_Lens.OrthographicSize = 2.4f;
     }
 }
 
