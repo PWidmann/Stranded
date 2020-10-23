@@ -2,12 +2,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class MapGenerator : MonoBehaviour
 {
+    public GameObject water;
+    public GameObject player;
+
     public int mapWidth;
     public int mapHeight;
+
     
+
     [Header("Map Seed")]
     public int seed;
 
@@ -22,6 +28,7 @@ public class MapGenerator : MonoBehaviour
     public int octaves;
 
     public bool useFalloff;
+    public bool useFlatShading;
     public float fallOffValueA = 3;
     public float fallOffValueB = 2.2f;
     float[,] falloffMap;
@@ -30,15 +37,20 @@ public class MapGenerator : MonoBehaviour
 
     PerlinNoise noise;
     float[,] noiseValues;
+    
 
     Mesh mesh;
     Vector3[] vertices;
     int[] triangles;
     Vector2[] uv;
 
+    public NavMeshSurface levelMeshSurface;
+    private MeshCollider meshCollider;
+
     private void Awake()
     {
-        
+        levelMeshSurface = GetComponent<NavMeshSurface>();
+        meshCollider = GetComponent<MeshCollider>();
     }
 
     void Start()
@@ -46,15 +58,28 @@ public class MapGenerator : MonoBehaviour
         mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = mesh;
         uv = new Vector2[(mapWidth + 1) * (mapHeight + 1)];
-    }
 
-    private void Update()
-    {
+
         falloffMap = FalloffGenerator.GenerateFalloffMap(mapWidth + 1, mapHeight + 1, fallOffValueA, fallOffValueB);
         noise = new PerlinNoise(seed.GetHashCode(), frequency, amplitude, lacunarity, persistance, octaves);
 
         CreateMap();
+        if (useFlatShading)
+        {
+            FlatShading();
+        }
         UpdateMesh();
+        levelMeshSurface.BuildNavMesh();
+        meshCollider.sharedMesh = mesh;
+
+
+        water.SetActive(true);
+        player.SetActive(true);
+    }
+
+    private void Update()
+    {
+        
     }
 
     private void CreateMap()
@@ -78,7 +103,7 @@ public class MapGenerator : MonoBehaviour
         {
             for (int x = 0; x <= mapWidth; x++)
             {
-                float y = heightCurve.Evaluate(noiseValues[x, z]) * heightScale;
+                float y = Mathf.Floor(heightCurve.Evaluate(noiseValues[x, z]) * heightScale);
                 vertices[i] = new Vector3(x, y, z);
                 uv[i] = new Vector2(x / (float)mapWidth, z / (float)mapHeight);
                 i++;
@@ -117,5 +142,21 @@ public class MapGenerator : MonoBehaviour
         mesh.uv = uv;
 
         mesh.RecalculateNormals();
+    }
+
+    void FlatShading()
+    {
+        Vector3[] flatShadedVertices = new Vector3[triangles.Length];
+        Vector2[] flatShadedUvs = new Vector2[triangles.Length];
+
+        for (int i = 0; i < triangles.Length; i++)
+        {
+            flatShadedVertices[i] = vertices[triangles[i]];
+            flatShadedUvs[i] = uv[triangles[i]];
+            triangles[i] = i;
+        }
+
+        vertices = flatShadedVertices;
+        uv = flatShadedUvs;
     }
 }
