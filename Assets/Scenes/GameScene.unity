@@ -150,7 +150,7 @@ Light:
   m_Type: 1
   m_Shape: 0
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
-  m_Intensity: 1.1
+  m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -160,9 +160,9 @@ Light:
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
-    m_Bias: 0.05
-    m_NormalBias: 0.4
-    m_NearPlane: 0.2
+    m_Bias: 0.033
+    m_NormalBias: 0
+    m_NearPlane: 0.1
     m_CullingMatrixOverride:
       e00: 1
       e01: 0
@@ -206,13 +206,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 705507993}
-  m_LocalRotation: {x: -0.4291243, y: -0.17727076, z: 0.08610118, w: -0.88148403}
-  m_LocalPosition: {x: 26.09285, y: 167.28659, z: -43.218758}
+  m_LocalRotation: {x: 0.30070576, y: 0, z: 0, w: 0.953717}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 21.625002, y: 412.396, z: -0.001}
+  m_LocalEulerAnglesHint: {x: 35, y: 0, z: 0}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -485,35 +485,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a3bbac54c77d340499e58b78762bdfcc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  seed: 1368
-  mapWidth: 100
-  mapHeight: 100
+  seed: 1678
+  mapWidth: 60
+  mapHeight: 60
   waterHeight: 0.7
-  heightScale: 5.24
-  frequency: 4.23
-  amplitude: 4.52
-  lacunarity: 1.21
+  heightScale: 4.49
+  frequency: 3.42
+  amplitude: 3.85
+  lacunarity: 1.31
   persistance: 0.5
   octaves: 4
   useFalloff: 1
   useFlatShading: 1
-  fallOffValueA: 1.23
-  fallOffValueB: 2.58
+  fallOffValueA: 1.25
+  fallOffValueB: 2.08
   heightCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
       value: 0
-      inSlope: 35.54619
-      outSlope: 35.54619
+      inSlope: 13.43605
+      outSlope: 13.43605
       tangentMode: 34
       weightedMode: 0
       inWeight: 0
       outWeight: 0.33333334
     - serializedVersion: 3
-      time: 0.0043870136
-      value: 0.1559416
+      time: 0.012630574
+      value: 0.16970503
       inSlope: 0.6293747
       outSlope: 0.6293747
       tangentMode: 0
@@ -521,10 +521,10 @@ MonoBehaviour:
       inWeight: 0.33333334
       outWeight: 0.20041426
     - serializedVersion: 3
-      time: 0.24120584
-      value: 0.28012067
-      inSlope: 0.736539
-      outSlope: 0.736539
+      time: 0.7892771
+      value: 0.6409877
+      inSlope: 1.1552675
+      outSlope: 1.1552675
       tangentMode: 34
       weightedMode: 0
       inWeight: 0.33333334
@@ -532,8 +532,8 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 1
       value: 1
-      inSlope: 0.94871485
-      outSlope: 0.94871485
+      inSlope: 1.7037174
+      outSlope: 1.7037174
       tangentMode: 34
       weightedMode: 0
       inWeight: 0.33333334

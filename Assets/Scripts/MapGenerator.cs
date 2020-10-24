@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.AccessControl;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -61,21 +62,17 @@ public class MapGenerator : MonoBehaviour
         GetComponent<MeshFilter>().mesh = mesh;
         uv = new Vector2[(mapWidth + 1) * (mapHeight + 1)];
 
-
         falloffMap = FalloffGenerator.GenerateFalloffMap(mapWidth + 1, mapHeight + 1, fallOffValueA, fallOffValueB);
         noise = new PerlinNoise(seed.GetHashCode(), frequency, amplitude, lacunarity, persistance, octaves);
 
         CreateTerrainMesh();
-        if (useFlatShading)
-        {
-            FlatShading();
-        }
+        FlatShading();
         ApplyMesh();
         levelMeshSurface.BuildNavMesh();
         meshCollider.sharedMesh = mesh;
 
         SpawnWater();
-        SpawnPlayer();       
+        SpawnPlayer();
     }
 
     private void Update()
@@ -86,7 +83,7 @@ public class MapGenerator : MonoBehaviour
     private void CreateTerrainMesh()
     {
         vertices = new Vector3[(mapWidth + 1) * (mapHeight + 1)];
-        noiseValues = noise.GetNoiseValues(mapWidth + 1, mapHeight + 1);
+        noiseValues = noise.GetNoiseValues(mapWidth*2 + 1, mapHeight*2 + 1);
 
         for (int x = 0; x <= mapWidth; x++)
         {
@@ -105,38 +102,56 @@ public class MapGenerator : MonoBehaviour
             for (int x = 0; x <= mapWidth; x++)
             {
                 float y = Mathf.Floor(heightCurve.Evaluate(noiseValues[x, z]) * heightScale);
+
+                
                 vertices[i] = new Vector3(x, y, z);
                 uv[i] = new Vector2(x / (float)mapWidth, z / (float)mapHeight);
                 i++;
             }
         }
 
-        triangles = new int[mapWidth * mapHeight * 6];
+        triangles = new int[mapWidth * mapHeight * 12];
 
         int vert = 0;
         int tris = 0;
 
-        for (int z = 0; z < mapHeight; z++)
+        // Create triangle quads
+        for (int z = 0; z < mapHeight; z+=2)
         {
-            for (int x = 0; x < mapWidth; x++)
+            for (int x = 0; x < mapWidth; x += 2)
             {
-                triangles[tris + 0] = vert + 0;
-                triangles[tris + 1] = vert + mapWidth + 1;
-                triangles[tris + 2] = vert + 1;
-                triangles[tris + 3] = vert + 1;
-                triangles[tris + 4] = vert + mapWidth + 1;
-                triangles[tris + 5] = vert + mapWidth + 2;
+                // Bottom triangle
+                triangles[tris + 0] = vert + 0 + (z * mapWidth/2);
+                triangles[tris + 1] = vert + mapWidth + 2 + (z * mapWidth / 2);
+                triangles[tris + 2] = vert + 2 + (z * mapWidth / 2);
 
-                vert++;
-                tris += 6;
+                // Right triangle
+                triangles[tris + 3] = vert + 2 + (z * mapWidth / 2);
+                triangles[tris + 4] = vert + mapWidth + 2 + (z * mapWidth / 2);
+                triangles[tris + 5] = vert + (mapWidth + 1) * 2 + 2 + (z * mapWidth / 2);
+
+                // Top triangle
+                triangles[tris + 6] = vert + (mapWidth + 1) * 2 + 2 + (z * mapWidth / 2);
+                triangles[tris + 7] = vert + mapWidth + 2 + (z * mapWidth /2);
+                triangles[tris + 8] = vert + (mapWidth + 1) * 2 + 0 + (z * mapWidth / 2);
+
+                // Left triangle
+                triangles[tris + 9] = vert + (mapWidth + 1) * 2 + 0 + (z * mapWidth / 2);
+                triangles[tris + 10] = vert + mapWidth + 2 + (z * mapWidth / 2);
+                triangles[tris + 11] = vert + 0 + (z * mapWidth / 2);
+
+                vert += 2;
+                tris += 12;
             }
-            vert++;
+            vert += 2;
         }
     }
 
     private void ApplyMesh()
     {
         mesh.Clear();
+
+        SmoothRectangularEdges();
 
         mesh.vertices = vertices;
         mesh.triangles = triangles;
@@ -147,7 +162,7 @@ public class MapGenerator : MonoBehaviour
 
     void FlatShading()
     {
-        // Duplicate vertices for each triangle to not smooth out edges
+        // Duplicate vertices for each triangle to prevent smooth edges
         Vector3[] flatShadedVertices = new Vector3[triangles.Length];
         Vector2[] flatShadedUvs = new Vector2[triangles.Length];
 
@@ -162,6 +177,42 @@ public class MapGenerator : MonoBehaviour
         uv = flatShadedUvs;
     }
 
+    void SmoothRectangularEdges()
+    {
+        Vector3[] rectBatch = new Vector3[12];
+
+        for (int v = 0; v < vertices.Length; v+=12)
+        {
+            for (int i = 0; i < 12; i++)
+            {
+                rectBatch[i] = vertices[i + v];
+            }
+
+            //North/South edge
+            if (rectBatch[0].y == rectBatch[2].y && rectBatch[0].y != rectBatch[8].y && rectBatch[8].y == rectBatch[5].y)
+            {
+                // Put middlepoints of quad to average height between the two heights
+
+                float y = (vertices[v + 0].y + vertices[v + 8].y) / 2;
+                vertices[v + 1].y = y;
+                vertices[v + 4].y = y;
+                vertices[v + 7].y = y;
+                vertices[v + 10].y = y;
+            }
+
+            //East/West edge
+            if (rectBatch[0].y == rectBatch[8].y && rectBatch[2].y == rectBatch[5].y && rectBatch[0].y != rectBatch[2].y)
+            {
+                // Put middlepoints of quad to average height between the two heights
+
+                float y = (vertices[v + 0].y + vertices[v + 2].y) / 2;
+                vertices[v + 1].y = y;
+                vertices[v + 4].y = y;
+                vertices[v + 7].y = y;
+                vertices[v + 10].y = y;
+            }
+        }
+    }
 
     void SpawnWater()
     {
