@@ -68,7 +68,7 @@ public class MapGenerator : MonoBehaviour
         CreateTerrainMesh();
         FlatShading();
         ApplyMesh();
-        levelMeshSurface.BuildNavMesh();
+        //levelMeshSurface.BuildNavMesh();
         meshCollider.sharedMesh = mesh;
 
         SpawnWater();
@@ -206,6 +206,46 @@ public class MapGenerator : MonoBehaviour
                 // Put middlepoints of quad to average height between the two heights
 
                 float y = (vertices[v + 0].y + vertices[v + 2].y) / 2;
+                vertices[v + 1].y = y;
+                vertices[v + 4].y = y;
+                vertices[v + 7].y = y;
+                vertices[v + 10].y = y;
+            }
+
+            // 3 corners (except top right) same height = align middle vertex
+            if (rectBatch[0].y == rectBatch[8].y && rectBatch[8].y == rectBatch[2].y)
+            {
+                float y = vertices[v + 0].y;
+                vertices[v + 1].y = y;
+                vertices[v + 4].y = y;
+                vertices[v + 7].y = y;
+                vertices[v + 10].y = y;
+            }
+
+            // 3 corners (except top left) same height = align middle vertex
+            if (rectBatch[0].y == rectBatch[2].y && rectBatch[2].y == rectBatch[5].y)
+            {
+                float y = vertices[v + 2].y;
+                vertices[v + 1].y = y;
+                vertices[v + 4].y = y;
+                vertices[v + 7].y = y;
+                vertices[v + 10].y = y;
+            }
+
+            // 3 corners (except bottom right) same height = align middle vertex
+            if (rectBatch[0].y == rectBatch[8].y && rectBatch[8].y == rectBatch[5].y)
+            {
+                float y = vertices[v + 0].y;
+                vertices[v + 1].y = y;
+                vertices[v + 4].y = y;
+                vertices[v + 7].y = y;
+                vertices[v + 10].y = y;
+            }
+
+            // 3 corners (except bottom left) same height = align middle vertex
+            if (rectBatch[2].y == rectBatch[8].y && rectBatch[8].y == rectBatch[5].y)
+            {
+                float y = vertices[v + 2].y;
                 vertices[v + 1].y = y;
                 vertices[v + 4].y = y;
                 vertices[v + 7].y = y;

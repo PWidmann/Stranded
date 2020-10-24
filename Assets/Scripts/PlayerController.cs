@@ -1,29 +1,50 @@
-﻿
+﻿using Cinemachine;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.AI;
-using Cinemachine;
 
 public class PlayerController : MonoBehaviour
 {
-    CinemachineVirtualCamera cMvirtualCamera;
-    public float cameraZoomRate = 3f;
-    Vector3 target;
-    NavMeshAgent agent;
+    public static PlayerController Instance;
+    //Movement
+    [Header("Movement")]
+    Vector2 inputDir;
+    Vector3 velocity;
+    public float runSpeed = 1;
+    public float gravity = -10;
+    public float turnSmoothTime = 0.05f;
+    float turnSmoothVelocity;
+    public float speedSmoothTime = 0.1f;
+    float speedSmoothVelocity;
+    float currentSpeed;
+    float velocityY;
+    private float targetRotation;
+    public float cameraZoomRate = 2f;
+    //References
+    Animator animator;
+    Transform cameraT;
+    CinemachineVirtualCamera cMVirtualCamera;
     RaycastHit hitInfo;
-    Ray ray;
-    Camera cam;
+    CharacterController controller;
+    float angle;
+    float animationSpeedPercent;
 
+
+    private void Awake()
+    {
+        if (Instance == null)
+            Instance = this;
+    }
     void Start()
     {
-        cam = Camera.main;
-        agent = GetComponent<NavMeshAgent>();
-        cMvirtualCamera = cam.GetComponent<CinemachineVirtualCamera>();
-        cMvirtualCamera.Follow = gameObject.transform;
-        cMvirtualCamera.LookAt = gameObject.transform;
-    }
+        animator = GetComponent<Animator>();
+        controller = GetComponent<CharacterController>();
+        cameraT = Camera.main.transform;
+        cMVirtualCamera = cameraT.GetComponent<CinemachineVirtualCamera>();
 
+        cMVirtualCamera.Follow = gameObject.transform;
+        cMVirtualCamera.LookAt = gameObject.transform;
+    }
 
     void Update()
     {
@@ -31,21 +52,47 @@ public class PlayerController : MonoBehaviour
         CameraZoom();
     }
 
+    private void LateUpdate()
+    {
+        
+    }
     void Movement()
     {
-        ray = cam.ScreenPointToRay(Input.mousePosition);
+        //Movement
+        Vector2 input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+        inputDir = input.normalized;
+        Move(inputDir);
 
-        if (Input.GetMouseButton(1))
+        // animator
+        animationSpeedPercent = currentSpeed / runSpeed;
+        animator.SetFloat("speedPercent", animationSpeedPercent, speedSmoothTime, Time.deltaTime);
+    }
+
+    void Move(Vector2 inputDir)
+    {
+
+        //Gravity
+        velocityY += Time.deltaTime * gravity;
+
+        //Player Rotation
+        if (inputDir != Vector2.zero)
         {
-            if (Physics.Raycast(ray, out hitInfo, maxDistance: 300f))
-            {
-                if (hitInfo.collider.CompareTag("Terrain"))
-                {
-                    target = hitInfo.point;
-                    agent.SetDestination(target);
-                    //Debug.DrawRay(Camera.main.transform.position, hitInfo.point - Camera.main.transform.position, Color.green);
-                }
-            }
+            // Turn the player in movement direction when not aiming
+            targetRotation = Mathf.Atan2(inputDir.x, inputDir.y) * Mathf.Rad2Deg + cameraT.eulerAngles.y;
+            transform.eulerAngles = Vector3.up * Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref turnSmoothVelocity, turnSmoothTime);
+        }
+
+        // Smooth runspeed 
+        float targetSpeed = runSpeed * inputDir.magnitude;
+        currentSpeed = Mathf.SmoothDamp(currentSpeed, targetSpeed, ref speedSmoothVelocity, speedSmoothTime);
+
+        velocity = transform.forward * currentSpeed + Vector3.up * velocityY;
+        controller.Move(velocity * Time.deltaTime);
+
+        //Grounded
+        if (controller.isGrounded)
+        {
+            velocityY = 0; // Deactivate gravity
         }
     }
 
@@ -53,17 +100,16 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetAxis("Mouse ScrollWheel") != 0f)
         {
-            if (cMvirtualCamera.m_Lens.OrthographicSize <= 5.6f && cMvirtualCamera.m_Lens.OrthographicSize >= 2.4f)
+            if (cMVirtualCamera.m_Lens.OrthographicSize <= 5.6f && cMVirtualCamera.m_Lens.OrthographicSize >= 2.4f)
             {
-                cMvirtualCamera.m_Lens.OrthographicSize += Input.GetAxis("Mouse ScrollWheel") * cameraZoomRate * -1;
-            } 
+                cMVirtualCamera.m_Lens.OrthographicSize += Input.GetAxis("Mouse ScrollWheel") * cameraZoomRate * -1;
+            }
         }
 
         // Clamp camera distance
-        if (cMvirtualCamera.m_Lens.OrthographicSize > 5.6f)
-            cMvirtualCamera.m_Lens.OrthographicSize = 5.6f;
-        if (cMvirtualCamera.m_Lens.OrthographicSize < 2.4f)
-            cMvirtualCamera.m_Lens.OrthographicSize = 2.4f;
+        if (cMVirtualCamera.m_Lens.OrthographicSize > 5.6f)
+            cMVirtualCamera.m_Lens.OrthographicSize = 5.6f;
+        if (cMVirtualCamera.m_Lens.OrthographicSize < 2.4f)
+            cMVirtualCamera.m_Lens.OrthographicSize = 2.4f;
     }
 }
-

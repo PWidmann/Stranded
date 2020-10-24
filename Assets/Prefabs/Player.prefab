@@ -167,7 +167,7 @@ GameObject:
   - component: {fileID: 328801964700217181}
   - component: {fileID: 5940264889025426727}
   - component: {fileID: 1142774152761472484}
-  - component: {fileID: 1142774152761472482}
+  - component: {fileID: 6823313222572668874}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -222,30 +222,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e56069f5b4c7f6f4f81425e9b6135fd3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CMvirtualCamera: {fileID: 0}
-  cameraZoomRate: 3
---- !u!195 &1142774152761472482
-NavMeshAgent:
+  runSpeed: 0.9
+  gravity: -10
+  turnSmoothTime: 0.1
+  speedSmoothTime: 0.1
+--- !u!143 &6823313222572668874
+CharacterController:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1142774152761472487}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
   m_Enabled: 1
-  m_AgentTypeID: 0
-  m_Radius: 0.3
-  m_Speed: 3.5
-  m_Acceleration: 8
-  avoidancePriority: 50
-  m_AngularSpeed: 240
-  m_StoppingDistance: 0
-  m_AutoTraverseOffMeshLink: 1
-  m_AutoBraking: 1
-  m_AutoRepath: 1
+  serializedVersion: 2
   m_Height: 2
-  m_BaseOffset: 0
-  m_WalkableMask: 4294967295
-  m_ObstacleAvoidanceType: 4
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 1.15, z: 0}
 --- !u!1 &1265489090894511963
 GameObject:
   m_ObjectHideFlags: 0
