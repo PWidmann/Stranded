@@ -5,5 +5,5 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     public static GameObject waterObject;
-    public static GameObject playerObject;
+    public static Vector3 playerPosition;
 }

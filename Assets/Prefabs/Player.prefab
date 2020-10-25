@@ -166,8 +166,8 @@ GameObject:
   m_Component:
   - component: {fileID: 328801964700217181}
   - component: {fileID: 5940264889025426727}
-  - component: {fileID: 1142774152761472484}
   - component: {fileID: 6823313222572668874}
+  - component: {fileID: 1142774152761472484}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -182,15 +182,15 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1142774152761472487}
-  m_LocalRotation: {x: -0, y: 0.98300964, z: -0, w: -0.18355407}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 2096131323660091834}
   - {fileID: 5242314664874233801}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 201.15399, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &5940264889025426727
 Animator:
   serializedVersion: 3
@@ -210,6 +210,24 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!143 &6823313222572668874
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1142774152761472487}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Height: 1.8
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &1142774152761472484
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -222,28 +240,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e56069f5b4c7f6f4f81425e9b6135fd3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  runSpeed: 0.9
-  gravity: -10
-  turnSmoothTime: 0.1
-  speedSmoothTime: 0.1
---- !u!143 &6823313222572668874
-CharacterController:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1142774152761472487}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Height: 2
-  m_Radius: 0.5
-  m_SlopeLimit: 45
-  m_StepOffset: 0.3
-  m_SkinWidth: 0.08
-  m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 1.15, z: 0}
+  runSpeed: 1.7
+  turnspeed: 300
 --- !u!1 &1265489090894511963
 GameObject:
   m_ObjectHideFlags: 0

@@ -2,17 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Security.AccessControl;
+using TMPro;
 using UnityEngine;
-using UnityEngine.AI;
+using UnityEngine.SocialPlatforms;
+using Random = UnityEngine.Random;
 
 public class MapGenerator : MonoBehaviour
 {
     [Header("Map Seed")]
     public int seed;
-
-    [Header("Map Size")]
-    public int mapWidth;
-    public int mapHeight;
 
     [Header("Water Height")]
     public float waterHeight = 0.7f;
@@ -25,7 +23,6 @@ public class MapGenerator : MonoBehaviour
     public float persistance;
     public int octaves;
     public bool useFalloff;
-    public bool useFlatShading;
     public float fallOffValueA = 3;
     public float fallOffValueB = 2.2f;
     public AnimationCurve heightCurve;  
@@ -33,9 +30,15 @@ public class MapGenerator : MonoBehaviour
     [Header("GameObjects")]
     public GameObject waterPrefab;
     public GameObject playerPrefab;
-    
+
+    [Header("Vegetation")]
+    public bool createVegetation = true;
+    public GameObject palmPrefab;
+    public int palmCount = 5;
+
     // Mesh generation
-    private NavMeshSurface levelMeshSurface;
+    private int mapWidth = 70;
+    private int mapHeight = 70;
     private MeshCollider meshCollider;
     private PerlinNoise noise;
     private float[,] noiseValues;
@@ -46,18 +49,19 @@ public class MapGenerator : MonoBehaviour
     private Vector2[] uv;
 
     // Object spawn check
-    Vector3 playerSpawnPosition;
+    Vector3 SpawnPosition;
     RaycastHit hitInfo;
     Ray ray;
+    
 
     private void Awake()
     {
-        levelMeshSurface = GetComponent<NavMeshSurface>();
         meshCollider = GetComponent<MeshCollider>();
     }
 
     void Start()
     {
+        Random.InitState(seed);
         mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = mesh;
         uv = new Vector2[(mapWidth + 1) * (mapHeight + 1)];
@@ -68,16 +72,59 @@ public class MapGenerator : MonoBehaviour
         CreateTerrainMesh();
         FlatShading();
         ApplyMesh();
-        //levelMeshSurface.BuildNavMesh();
         meshCollider.sharedMesh = mesh;
 
         SpawnWater();
         SpawnPlayer();
+
+        if(createVegetation)
+            SpawnVegetation();
     }
 
     private void Update()
     {
         
+    }
+
+    void SpawnVegetation()
+    {
+        //Look for possible spawn position
+        Vector3 checkPosition = Vector3.zero;
+
+        
+
+        for (int z = 0; z < mapHeight; z+= 2)
+        {
+            for (int x = 0; x < mapWidth; x+= 2)
+            {
+                checkPosition.z = z + 0.5f;
+                checkPosition.x = x + 0.5f;
+                checkPosition.y = 10f;
+
+                if (Physics.Raycast(checkPosition, Vector3.down, out hitInfo, maxDistance: 50))
+                {
+                    if (hitInfo.collider.CompareTag("Terrain"))
+                    {
+                        if (palmCount <= 0)
+                            break;
+                        
+                        float rnd = Random.Range(0, 100);
+
+                        
+
+
+                        if (rnd > 90 && hitInfo.point.y == 1f)
+                        {
+                            float rndRotation = Random.Range(0, 360);
+
+                            SpawnPosition = new Vector3(checkPosition.x, hitInfo.point.y, checkPosition.z);
+                            Instantiate(palmPrefab, SpawnPosition, Quaternion.Euler(new Vector3(-90f, rndRotation, 0)));
+                            palmCount--;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private void CreateTerrainMesh()
@@ -273,14 +320,12 @@ public class MapGenerator : MonoBehaviour
                 if (hitInfo.collider.CompareTag("Terrain"))
                 {
                     // When you find land, add one unit and instantiate player
-                    checkPosition.z = z + 1;
-                    playerSpawnPosition = new Vector3(checkPosition.x, 1, checkPosition.z);
-                    Instantiate(playerPrefab, playerSpawnPosition, Quaternion.identity);
+                    checkPosition.z = z + 10;
+                    SpawnPosition = new Vector3(checkPosition.x, 1, checkPosition.z);
+                    Instantiate(playerPrefab, SpawnPosition, Quaternion.identity);
                     break;
                 }
             }
         }
-
-        
     }
 }
