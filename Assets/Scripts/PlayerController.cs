@@ -12,7 +12,7 @@ public class PlayerController : MonoBehaviour
     Vector3 velocity;
     public float runSpeed = 1.7f;
     private float gravity = -10;
-    private float speedSmoothTime = 0.1f;
+    private float speedSmoothTime = 0.5f;
     float speedSmoothVelocity;
     float currentSpeed;
     float velocityY;
@@ -65,6 +65,10 @@ public class PlayerController : MonoBehaviour
         // animator
         animationSpeedPercent = currentSpeed / runSpeed;
         animator.SetFloat("speedPercent", animationSpeedPercent, speedSmoothTime, Time.deltaTime);
+        if (transform.position.y < 0.3f)
+            animator.SetBool("isSwimming", true);
+        else
+            animator.SetBool("isSwimming", false);
     }
 
     void ClickToMove()
@@ -84,7 +88,7 @@ public class PlayerController : MonoBehaviour
             {
                 if (Physics.Raycast(ray, out hitInfo, maxDistance: 300f))
                 {
-                    if (hitInfo.collider.CompareTag("Terrain"))
+                    if (hitInfo.collider.CompareTag("Terrain") || hitInfo.collider.CompareTag("Water"))
                     {
                         Vector3 hit = new Vector3(Mathf.Floor(hitInfo.point.x) + 0.5f, Mathf.Floor(hitInfo.point.y), Mathf.Floor(hitInfo.point.z) + 0.5f);
                         target = hit;

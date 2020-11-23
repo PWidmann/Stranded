@@ -9,6 +9,8 @@ using Random = UnityEngine.Random;
 
 public class MapGenerator : MonoBehaviour
 {
+    public bool UpdateMapContinuously = false;
+
     [Header("Map Seed")]
     public int seed;
 
@@ -25,16 +27,21 @@ public class MapGenerator : MonoBehaviour
     public bool useFalloff;
     public float fallOffValueA = 3;
     public float fallOffValueB = 2.2f;
-    public AnimationCurve heightCurve;  
+    public AnimationCurve heightCurve;
 
     [Header("GameObjects")]
+    public GameObject scene;
+    public GameObject terrain;
+    public GameObject vegetation;
     public GameObject waterPrefab;
     public GameObject playerPrefab;
+    
 
     [Header("Vegetation")]
     public bool createVegetation = true;
     public GameObject palmPrefab;
     public int palmCount = 5;
+    private int palmsToPlant = 0;
 
     // Mesh generation
     private int mapWidth = 70;
@@ -52,27 +59,32 @@ public class MapGenerator : MonoBehaviour
     Vector3 SpawnPosition;
     RaycastHit hitInfo;
     Ray ray;
+    public GameObject cameraTarget;
     
 
     private void Awake()
     {
         meshCollider = GetComponent<MeshCollider>();
+
+        palmsToPlant = palmCount;
     }
 
     void Start()
     {
         Random.InitState(seed);
         mesh = new Mesh();
-        GetComponent<MeshFilter>().mesh = mesh;
+        terrain.GetComponent<MeshFilter>().mesh = mesh;
         uv = new Vector2[(mapWidth + 1) * (mapHeight + 1)];
 
         falloffMap = FalloffGenerator.GenerateFalloffMap(mapWidth + 1, mapHeight + 1, fallOffValueA, fallOffValueB);
         noise = new PerlinNoise(seed.GetHashCode(), frequency, amplitude, lacunarity, persistance, octaves);
 
-        CreateTerrainMesh();
+        CreateTerrainMeshData();
+
         FlatShading();
+        
         ApplyMesh();
-        meshCollider.sharedMesh = mesh;
+        terrain.GetComponent<MeshCollider>().sharedMesh = mesh;
 
         SpawnWater();
         SpawnPlayer();
@@ -83,15 +95,44 @@ public class MapGenerator : MonoBehaviour
 
     private void Update()
     {
-        
+        if (UpdateMapContinuously)
+        {
+            falloffMap = FalloffGenerator.GenerateFalloffMap(mapWidth + 1, mapHeight + 1, fallOffValueA, fallOffValueB);
+            noise = new PerlinNoise(seed.GetHashCode(), frequency, amplitude, lacunarity, persistance, octaves);
+
+            CreateTerrainMeshData();
+
+
+            FlatShading();
+
+            ApplyMesh();
+            terrain.GetComponent<MeshCollider>().sharedMesh = mesh;
+
+            if (createVegetation)
+                SpawnVegetation();
+        }
+    }
+
+    private void OnValidate()
+    {
+        if (UpdateMapContinuously)
+        {
+            GameObject[] trees = GameObject.FindGameObjectsWithTag("Tree");
+
+            foreach (GameObject tree in trees)
+            {
+                Destroy(tree);
+            }
+
+            palmsToPlant = palmCount;
+        }  
     }
 
     void SpawnVegetation()
     {
+        
         //Look for possible spawn position
         Vector3 checkPosition = Vector3.zero;
-
-        
 
         for (int z = 0; z < mapHeight; z+= 2)
         {
@@ -105,7 +146,7 @@ public class MapGenerator : MonoBehaviour
                 {
                     if (hitInfo.collider.CompareTag("Terrain"))
                     {
-                        if (palmCount <= 0)
+                        if (palmsToPlant <= 0)
                             break;
                         
                         float rnd = Random.Range(0, 100);
@@ -118,8 +159,8 @@ public class MapGenerator : MonoBehaviour
                             float rndRotation = Random.Range(0, 360);
 
                             SpawnPosition = new Vector3(checkPosition.x, hitInfo.point.y, checkPosition.z);
-                            Instantiate(palmPrefab, SpawnPosition, Quaternion.Euler(new Vector3(-90f, rndRotation, 0)));
-                            palmCount--;
+                            Instantiate(palmPrefab, SpawnPosition, Quaternion.Euler(new Vector3(-90f, rndRotation, 0))).transform.parent = vegetation.transform;
+                            palmsToPlant--;
                         }
                     }
                 }
@@ -127,7 +168,7 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
-    private void CreateTerrainMesh()
+    private void CreateTerrainMeshData()
     {
         vertices = new Vector3[(mapWidth + 1) * (mapHeight + 1)];
         noiseValues = noise.GetNoiseValues(mapWidth*2 + 1, mapHeight*2 + 1);
@@ -222,6 +263,7 @@ public class MapGenerator : MonoBehaviour
 
         vertices = flatShadedVertices;
         uv = flatShadedUvs;
+        
     }
 
     void SmoothRectangularEdges()
@@ -303,13 +345,14 @@ public class MapGenerator : MonoBehaviour
 
     void SpawnWater()
     {
-        Instantiate(waterPrefab, new Vector3(mapWidth/2, waterHeight, mapHeight/2), Quaternion.identity);
+        GameObject water = Instantiate(waterPrefab, new Vector3(mapWidth/2, waterHeight, mapHeight/2), Quaternion.identity);
+        water.transform.parent = scene.transform;
     }
 
     void SpawnPlayer()
     {
         //Look for possible spawn position in Z direction from map border
-        Vector3 checkPosition = new Vector3(mapWidth/2, 5f, 0);
+        Vector3 checkPosition = new Vector3(mapWidth/2, 10f, 0);
 
         for (int z = 0; z < mapHeight; z++)
         {
@@ -322,7 +365,8 @@ public class MapGenerator : MonoBehaviour
                     // When you find land, add one unit and instantiate player
                     checkPosition.z = z + 10;
                     SpawnPosition = new Vector3(checkPosition.x, 1, checkPosition.z);
-                    Instantiate(playerPrefab, SpawnPosition, Quaternion.identity);
+                    GameObject player = Instantiate(playerPrefab, SpawnPosition, Quaternion.identity);
+                    cameraTarget.transform.position = player.transform.position;
                     break;
                 }
             }

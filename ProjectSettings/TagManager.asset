@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Water
   - Terrain
+  - Tree
   layers:
   - Default
   - TransparentFX
@@ -16,8 +17,8 @@ TagManager:
   - 
   - 
   - Terrain
-  - 
-  - 
+  - Tree
+  - Player
   - 
   - 
   - 
